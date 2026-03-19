@@ -47,3 +47,43 @@ variable "connectivity_type" {
   description = "Connectivity type for the NAT gateway (e.g., public or private)"
   type        = string
 }
+
+variable "ami_id" {
+  description = "The AMI ID for the EC2 instance"
+  type        = string
+}
+
+variable "instance_type" {
+  description = "The instance type for the EC2 instance"
+  type        = string
+}
+
+variable "instance_name" {
+  description = "The name for the EC2 instance"
+  type        = string
+}
+
+variable "key_name" {
+  description = "The name of the key pair"
+  type        = string
+
+}
+variable "public_key_path" {
+  description = "The path to the public key file for the key pair"
+  type        = string
+}
+
+variable "volume_size" {
+  description = "The size of the root volume"
+  type        = number
+}
+
+variable "volume_type" {
+  description = "The type of the root volume"
+  type        = string
+}
+
+variable "sg_name" {
+  description = "Name of the security group"
+  type        = string
+}
