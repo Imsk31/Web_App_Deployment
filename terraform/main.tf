@@ -11,9 +11,9 @@ module "vpc" {
   tags = var.tags
 }
 
-resource "aws_security_group" "main" {
+resource "aws_security_group" "ec2_sg" {
   name        = var.sg_name
-  description = "Main security group"
+  description = "EC2 security group"
   vpc_id = module.vpc.vpc_id
 
   ingress {
@@ -34,6 +34,13 @@ resource "aws_security_group" "main" {
     description = "Allow HTTPS"
     from_port   = 443
     to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+  ingress {
+    description = "Allow DataBase access"
+    from_port   = 3306
+    to_port     = 3306
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
@@ -61,9 +68,66 @@ module "ec2" {
   instance_name = var.instance_name
   key_name = var.key_name
   public_key_path = var.public_key_path
-  security_group_ids = [aws_security_group.main.id]
+  security_group_ids = [aws_security_group.ec2_sg.id]
   volume_size = var.volume_size
   volume_type = var.volume_type
   tags = var.tags
 }
 
+data "aws_security_groups" "all" {
+  filter {
+    name   = "security_group_ids"
+    values = [module.vpc.vpc_id]
+  }
+}
+
+resource "aws_security_group" "RDS" {
+  name        = var.rds_sg_name
+  vpc_id      = module.vpc.vpc_id
+
+  ingress {
+    description = "Allow DataBase access"
+    from_port   = 3306
+    to_port     = 3306
+    protocol    = "tcp"
+    # cidr_blocks = ["0.0.0.0/0"]
+    security_groups = [ aws_security_group.ec2_sg.id ]
+  }
+  egress {
+    description = "Allow all outbound traffic"
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+    }
+}
+
+module "RDS" {
+  source = "./modules/RDS"
+
+  identifier = var.identifier
+
+  rds_engine = var.rds_engine
+  engine_version = var.engine_version
+  instance_class = var.instance_class
+  allocated_storage = var.allocated_storage
+  storage_type = var.storage_type
+  storage_encrypted = var.storage_encrypted
+
+  vpc_security_group_ids = [aws_security_group.RDS.id]
+  multi_az = var.multi_az
+  publicly_accessible = var.publicly_accessible
+
+  username = var.username
+  password = var.password
+  password_wo_version = var.password_wo_version
+
+  snapshot_identifier = var.snapshot_identifier
+  skip_final_snapshot = var.skip_final_snapshot
+  deletion_protection = var.deletion_protection
+
+  subnet_ids = module.vpc.private_subnet_ids
+  db_subnet_group_name = var.db_subnet_group_name
+
+  tags = var.tags
+}
