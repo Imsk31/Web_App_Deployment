@@ -1,14 +1,14 @@
 module "vpc" {
-  source = "./modules/vpc"
-  vpc_name = var.vpc_name
-  vpc_cidr = var.vpc_cidr
-  region = var.region
-  public_subnet_cidrs = var.public_subnet_cidrs
-  private_subnet_cidrs = var.private_subnet_cidrs
-  connectivity_type = var.connectivity_type
-  enable_dns_support = var.enable_dns_support
-  enable_dns_hostnames = var.enable_dns_hostnames
-  tags = var.tags
+  source                = "./modules/vpc"
+  vpc_name              = var.vpc_name
+  vpc_cidr              = var.vpc_cidr
+  region                = var.region
+  public_subnet_cidrs   = var.public_subnet_cidrs
+  private_subnet_cidrs  = var.private_subnet_cidrs
+  connectivity_type     = var.connectivity_type
+  enable_dns_support    = var.enable_dns_support
+  enable_dns_hostnames  = var.enable_dns_hostnames
+  tags                  = var.tags
 }
 
 resource "aws_security_group" "ec2_sg" {
@@ -52,6 +52,7 @@ resource "aws_security_group" "ec2_sg" {
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
  }
+
   tags = merge(
     {
       Name = "${var.instance_name}-sg"
@@ -61,17 +62,17 @@ resource "aws_security_group" "ec2_sg" {
 }
 
 module "ec2" {
-  source = "./modules/ec2"
-  ami_id = var.ami_id
-  instance_type = var.instance_type
-  subnet_id = module.vpc.public_subnet_ids[0]
-  instance_name = var.instance_name
-  key_name = var.key_name
-  public_key_path = var.public_key_path
-  security_group_ids = [aws_security_group.ec2_sg.id]
-  volume_size = var.volume_size
-  volume_type = var.volume_type
-  tags = var.tags
+  source              = "./modules/ec2"
+  ami_id              = var.ami_id
+  instance_type       = var.instance_type
+  subnet_id           = module.vpc.public_subnet_ids[0]
+  instance_name       = var.instance_name
+  key_name            = var.key_name
+  public_key_path     = var.public_key_path
+  security_group_ids  = [aws_security_group.ec2_sg.id]
+  volume_size         = var.volume_size
+  volume_type         = var.volume_type
+  tags                = var.tags
 }
 
 data "aws_security_groups" "all" {
@@ -111,29 +112,28 @@ resource "aws_security_group" "RDS" {
 module "RDS" {
   source = "./modules/RDS"
 
-  identifier = var.identifier
-
-  rds_engine = var.rds_engine
-  engine_version = var.engine_version
-  instance_class = var.instance_class
+  identifier        = var.identifier
+  rds_engine        = var.rds_engine
+  engine_version    = var.engine_version
+  instance_class    = var.instance_class
   allocated_storage = var.allocated_storage
-  storage_type = var.storage_type
+  storage_type      = var.storage_type
   storage_encrypted = var.storage_encrypted
 
   vpc_security_group_ids = [aws_security_group.RDS.id]
-  multi_az = var.multi_az
-  publicly_accessible = var.publicly_accessible
+  multi_az               = var.multi_az
+  publicly_accessible    = var.publicly_accessible
+  subnet_ids             = module.vpc.private_subnet_ids
+  db_subnet_group_name   = var.db_subnet_group_name
 
-  username = var.username
-  password = var.password
-  password_wo_version = var.password_wo_version
+
+  username             = var.username
+  password             = var.password
+  password_wo_version  = var.password_wo_version
 
   snapshot_identifier = var.snapshot_identifier
   skip_final_snapshot = var.skip_final_snapshot
   deletion_protection = var.deletion_protection
-
-  subnet_ids = module.vpc.private_subnet_ids
-  db_subnet_group_name = var.db_subnet_group_name
 
   tags = var.tags
 }

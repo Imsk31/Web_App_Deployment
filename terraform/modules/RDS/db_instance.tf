@@ -6,22 +6,22 @@
 
 resource "aws_db_instance" "main" {
 
-  engine = var.rds_engine
-  engine_version = var.engine_version
-  instance_class = var.instance_class
-  allocated_storage = var.allocated_storage
-  storage_type = var.storage_type
-  storage_encrypted = var.storage_encrypted
+  engine                = var.rds_engine
+  engine_version        = var.engine_version
+  instance_class        = var.instance_class
+  allocated_storage     = var.allocated_storage
+  storage_type          = var.storage_type
+  storage_encrypted     = var.storage_encrypted
   
-  multi_az = var.multi_az
-  publicly_accessible = var.publicly_accessible
-  vpc_security_group_ids = var.vpc_security_group_ids
-  db_subnet_group_name = aws_db_subnet_group.main.name
-  identifier = var.identifier    
+  multi_az                = var.multi_az
+  publicly_accessible     = var.publicly_accessible
+  vpc_security_group_ids  = var.vpc_security_group_ids
+  db_subnet_group_name    = aws_db_subnet_group.main.name
+  identifier              = var.identifier    
   
   username = var.username
 
-  password_wo = var.password
+  password_wo         = var.password
   password_wo_version = var.password_wo_version
   
   snapshot_identifier = var.snapshot_identifier
@@ -43,9 +43,9 @@ resource "aws_db_instance" "main" {
 
 resource "aws_db_subnet_group" "main" {
 
-  name = var.db_subnet_group_name
+  name        = var.db_subnet_group_name
+  subnet_ids  = var.subnet_ids
 
-  subnet_ids = var.subnet_ids
     tags = merge(
     {
       Name = "${var.db_subnet_group_name}-subnet-group"
