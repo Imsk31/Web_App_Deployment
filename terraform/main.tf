@@ -100,6 +100,12 @@ resource "aws_security_group" "RDS" {
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
     }
+  tags = merge(
+    {
+      Name = "${var.identifier}-rds-sg"
+    },
+    var.tags
+  )
 }
 
 module "RDS" {
