@@ -173,3 +173,29 @@ variable "db_subnet_group_name" {
   description = "Name of the DB subnet group"
   type = string 
 }
+
+variable "cluster_name" {
+  description = "The name of the EKS cluster"
+  type        = string 
+}
+
+variable "eks_instance_type" {
+  description = "EC2 instance type for cluster nodes"
+  type = string
+}
+
+variable "desired_size" {
+  description = "Desired number of worker nodes in the node group"
+  type        = number
+}
+
+variable "max_size" {
+  description = "Maximum number of worker nodes in the node group"
+  type        = number
+}
+
+variable "min_size" {
+  description = "Minimum number of worker nodes in the node group"
+  type        = number
+}
+

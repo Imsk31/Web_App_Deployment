@@ -25,3 +25,19 @@ output "vpc_security_group_ids" {
 output "RDS_Endpoint" {
   value = module.RDS.RDS_Endpoint
 }
+
+output "cluster_name" {
+  value = module.EKS.cluster_name
+}
+
+output "cluster_endpoint" {
+  value = module.EKS.cluster_endpoint
+}
+
+output "cluster_security_group_id" {
+  value = module.EKS.cluster_security_group_id
+}
+
+output "worker_security_group_id" {
+  value = module.EKS.worker_security_group_id
+}

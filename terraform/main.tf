@@ -77,7 +77,7 @@ module "ec2" {
 
 data "aws_security_groups" "all" {
   filter {
-    name   = "security_group_ids"
+    name   = "vpc-id"
     values = [module.vpc.vpc_id]
   }
 }
@@ -134,6 +134,21 @@ module "RDS" {
   snapshot_identifier = var.snapshot_identifier
   skip_final_snapshot = var.skip_final_snapshot
   deletion_protection = var.deletion_protection
+
+  tags = var.tags
+}
+
+module "EKS" {
+  source = "./modules/EKS_Cluster"
+
+  cluster_name = var.cluster_name
+  vpc_id       = module.vpc.vpc_id
+  private_subnet_ids = module.vpc.private_subnet_ids
+
+  desired_size = var.desired_size
+  max_size     = var.max_size
+  min_size     = var.min_size
+  instance_type = var.eks_instance_type
 
   tags = var.tags
 }
