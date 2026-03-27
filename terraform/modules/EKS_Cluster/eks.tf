@@ -41,7 +41,8 @@ resource "aws_eks_node_group" "main" {
 
   instance_types = [ var.instance_type ]
   
-  depends_on = [ aws_iam_role_policy_attachment.worker_node_policy_attachment
+  depends_on = [ aws_eks_cluster.main
+    , aws_iam_role_policy_attachment.worker_node_policy_attachment
     , aws_iam_role_policy_attachment.cni_policy_attachment
     , aws_iam_role_policy_attachment.ecr_policy_attachment
     , aws_iam_role_policy_attachment.ebs_csi_policy_attachment
