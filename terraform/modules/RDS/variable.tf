@@ -72,6 +72,10 @@ variable "subnet_ids" {
   description = "List of subnet IDs for the DB subnet group"
   type = list(string)
 }
+variable "vpc_id" {
+  description = "vpc id for the RDS instance"
+  type = string
+}
 variable "tags" {
   description = "Tags to apply to the RDS instance"
   type = map(string)

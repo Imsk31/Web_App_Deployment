@@ -75,33 +75,6 @@ module "ec2" {
   tags                = var.tags
 }
 
-resource "aws_security_group" "RDS" {
-  name        = "${var.identifier}-rds-sg"
-  vpc_id      = module.vpc.vpc_id
-
-  ingress {
-    description = "Allow DataBase access"
-    from_port   = 3306
-    to_port     = 3306
-    protocol    = "tcp"
-    # cidr_blocks = ["0.0.0.0/0"]
-    security_groups = [ aws_security_group.ec2_sg.id ]
-  }
-  egress {
-    description = "Allow all outbound traffic"
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-    }
-  tags = merge(
-    {
-      Name = "${var.identifier}-rds-sg"
-    },
-    var.tags
-  )
-}
-
 module "RDS" {
   source = "./modules/RDS"
 
@@ -113,7 +86,8 @@ module "RDS" {
   storage_type      = var.storage_type
   storage_encrypted = var.storage_encrypted
 
-  vpc_security_group_ids = [aws_security_group.RDS.id]
+  vpc_id                 = module.vpc.vpc_id
+  vpc_security_group_ids = [aws_security_group.ec2_sg.id]
   multi_az               = var.multi_az
   publicly_accessible    = var.publicly_accessible
   subnet_ids             = module.vpc.private_subnet_ids
