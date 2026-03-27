@@ -38,3 +38,9 @@ variable "instance_type" {
   description = "The EC2 instance type for the worker nodes"
   type        = string
 }
+
+variable "admin_sg_id" {
+  description = "The security group ID for the admin host"
+  type        = string
+  default = null
+}

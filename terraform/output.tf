@@ -18,12 +18,12 @@ output "aws_instance_public_ip" {
   value = module.ec2.aws_instance_public_ip
 }
 
-output "vpc_security_group_ids" {
-  value = data.aws_security_groups.all.ids
-}
-
 output "RDS_Endpoint" {
   value = module.RDS.RDS_Endpoint
+}
+
+output "rds_sg_id" {
+  value = module.RDS.rds_sg_id
 }
 
 output "cluster_name" {

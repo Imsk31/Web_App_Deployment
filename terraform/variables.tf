@@ -38,11 +38,6 @@ variable "private_subnet_cidrs" {
   type        = list(string)
 }
 
-# variable "availability_zones" {
-#   description = "Availability zones for the subnets"
-#   type        = list(string)
-# }
-
 variable "connectivity_type" {
   description = "Connectivity type for the NAT gateway (e.g., public or private)"
   type        = string
@@ -198,4 +193,3 @@ variable "min_size" {
   description = "Minimum number of worker nodes in the node group"
   type        = number
 }
-

@@ -12,7 +12,7 @@ module "vpc" {
 }
 
 resource "aws_security_group" "ec2_sg" {
-  name        = var.sg_name
+  name        = "${var.instance_name}-sg"
   description = "EC2 security group"
   vpc_id = module.vpc.vpc_id
 
@@ -75,15 +75,8 @@ module "ec2" {
   tags                = var.tags
 }
 
-data "aws_security_groups" "all" {
-  filter {
-    name   = "vpc-id"
-    values = [module.vpc.vpc_id]
-  }
-}
-
 resource "aws_security_group" "RDS" {
-  name        = var.rds_sg_name
+  name        = "${var.identifier}-rds-sg"
   vpc_id      = module.vpc.vpc_id
 
   ingress {
@@ -141,14 +134,15 @@ module "RDS" {
 module "EKS" {
   source = "./modules/EKS_Cluster"
 
-  cluster_name = var.cluster_name
-  vpc_id       = module.vpc.vpc_id
-  private_subnet_ids = module.vpc.private_subnet_ids
+  cluster_name        = var.cluster_name
+  vpc_id              = module.vpc.vpc_id
+  private_subnet_ids  = module.vpc.private_subnet_ids
+  admin_sg_id         = aws_security_group.ec2_sg.id
 
-  desired_size = var.desired_size
-  max_size     = var.max_size
-  min_size     = var.min_size
-  instance_type = var.eks_instance_type
+  desired_size    = var.desired_size
+  max_size        = var.max_size
+  min_size        = var.min_size
+  instance_type   = var.eks_instance_type
 
   tags = var.tags
 }
