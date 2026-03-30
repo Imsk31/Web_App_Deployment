@@ -1,7 +1,7 @@
-#####################################################################################################################
+#---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # Terraform module for creating an RDS instance with a subnet group
 # This module allows you to create an RDS instance with specified configurations, including engine type, version, instance class, storage options, and security group associations.
-#####################################################################################################################
+#---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
 resource "aws_db_instance" "main" {
@@ -36,11 +36,11 @@ resource "aws_db_instance" "main" {
   )
 }
 
-#######################################################################################################################
+#----------------------------------------------------------------------------------------------------------------
 # Terraform module for creating a DB subnet group for RDS
 # This module creates a DB subnet group that can be associated with an RDS instance. 
 # It takes a list of subnet IDs and tags as input and creates a subnet group that can be used to specify the subnets in which the RDS instance will be deployed.
-#######################################################################################################################
+#----------------------------------------------------------------------------------------------------------------
 
 resource "aws_db_subnet_group" "main" {
 

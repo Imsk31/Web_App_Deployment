@@ -1,11 +1,11 @@
-######################################################################################
+#------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # IAM Roles and Policies for EKS Cluster and Node Groups
 # This file defines the IAM roles and policies required for the EKS cluster and its worker nodes.
 # The EKS cluster role allows the EKS service to manage the cluster, while the node group role allows EC2 instances to join the cluster and interact with AWS services.
 # The necessary AWS managed policies are attached to each role to ensure proper permissions for cluster and node group operations.
 # The cluster role is assumed by the EKS service, while the node group role is assumed by EC2 instances that will serve as worker nodes in the cluster.
 # The policies attached to the node group role include permissions for worker node operations, CNI plugin, ECR access, and EBS CSI driver.
-######################################################################################
+#-----------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
 # IAM Role for EKS Cluster

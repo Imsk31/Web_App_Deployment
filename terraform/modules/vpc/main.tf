@@ -1,10 +1,10 @@
+               
+##-----------------------------------------------------------------------------------------------------------------------------------------------------
+# This module creates a VPC with public and private subnets, an Internet Gateway, and NAT Gateways.                                                    
+# It also sets up route tables for both public and private subnets.                                                                                    
+# The module is designed to be flexible, allowing you to specify the CIDR blocks for the VPC and subnets, as well as the availability zones and tags.  
+#------------------------------------------------------------------------------------------------------------------------------------------------------
 
-                    
-########################################################################################################################################################
-# This module creates a VPC with public and private subnets, an Internet Gateway, and NAT Gateways.                                                    #
-# It also sets up route tables for both public and private subnets.                                                                                    #
-# The module is designed to be flexible, allowing you to specify the CIDR blocks for the VPC and subnets, as well as the availability zones and tags.  #
-########################################################################################################################################################
 
 
 resource "aws_vpc" "main" {

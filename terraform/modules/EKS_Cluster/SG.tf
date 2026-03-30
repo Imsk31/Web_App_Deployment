@@ -1,8 +1,9 @@
-#####################################################################################################################################################################################################################
+#----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # EKS Cluster Security Groups. This code defines two security groups for the EKS cluster: one for the cluster itself and another for the worker nodes.
 # The cluster security group allows communication from the worker nodes to the cluster API server on port 443, while the worker security group allows communication between worker nodes and with the cluster API server on a range of ports. Both security groups allow all outbound traffic. 
 #The security groups are tagged with the cluster name and any additional tags provided in the variables.
-#####################################################################################################################################################################################################################
+#----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 
 # Cluster SG
 resource "aws_security_group" "eks_cluster_sg" {
