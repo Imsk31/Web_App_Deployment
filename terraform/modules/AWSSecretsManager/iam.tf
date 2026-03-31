@@ -6,7 +6,6 @@ locals {
   oidc_provider = replace(aws_iam_openid_connect_provider.eks.url, "https://", "")
 }
 
-#
 data "aws_iam_policy_document" "irsa_assume_role" {
   statement {
     effect  = "Allow"
