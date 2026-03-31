@@ -203,3 +203,13 @@ variable "recovery_window_in_days" {
   description = "Recovery window in days"
   type = number
 }
+
+variable "aws_lb_controller_namespace" {
+  description = "K8s namespace for AWS Load Balancer Controller"
+  type        = string
+}
+
+variable "aws_lb_controller_service_account_name" {
+  description = "K8s service account name for AWS Load Balancer Controller"
+  type        = string
+}

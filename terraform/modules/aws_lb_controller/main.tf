@@ -9,8 +9,6 @@ resource "aws_iam_policy" "lb_controller_policy" {
   name        = "${var.cluster_name}-lb-controller-policy"
   description = "IAM policy for AWS Load Balancer Controller"
   policy      = data.http.lb_controller_policy.response_body
-
-  tags = var.tags
 }
 
 # -------------------------------------------------------
@@ -50,8 +48,6 @@ data "aws_iam_policy_document" "lb_controller_assume_role" {
 resource "aws_iam_role" "lb_controller_role" {
   name               = "${var.cluster_name}-lb-controller-role"
   assume_role_policy = data.aws_iam_policy_document.lb_controller_assume_role.json
-
-  tags = var.tags
 }
 
 resource "aws_iam_role_policy_attachment" "lb_controller_attach" {

@@ -136,3 +136,15 @@ module "secrets_manager" {
 
   tags = var.tags
 }
+
+module "aws_lb_controller" {
+  source = "./modules/aws_lb_controller"
+
+  cluster_name         = var.cluster_name
+  oidc_provider_arn    = module.secrets_manager.oidc_provider_arn
+  oidc_issuer_url      = module.EKS.cluster_oidc_issuer_url
+  namespace            = var.aws_lb_controller_namespace
+  service_account_name = var.aws_lb_controller_service_account_name
+
+  tags = var.tags
+}
