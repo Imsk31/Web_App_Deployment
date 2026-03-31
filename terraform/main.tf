@@ -137,6 +137,8 @@ module "secrets_manager" {
   namespace               = var.secrets_manager_namespace
   service_account_name    = var.secrets_manager_service_account_name
 
+  depends_on = [ module.EKS ]
+
   tags = var.tags
 }
 
@@ -148,6 +150,8 @@ module "aws_lb_controller" {
   oidc_issuer_url      = module.EKS.cluster_oidc_issuer_url
   namespace            = var.aws_lb_controller_namespace
   service_account_name = var.aws_lb_controller_service_account_name
+
+  depends_on = [ module.EKS ]
 
   tags = var.tags
 }

@@ -8,6 +8,8 @@ resource "helm_release" "external_secrets" {
   namespace        = "external-secrets"
   version          = "0.9.13"
   create_namespace = true
+  wait = true
+  timeout = 480
 
   set = [
     {
@@ -19,4 +21,10 @@ resource "helm_release" "external_secrets" {
       value = "9443"
     }
   ]
+
+  lifecycle {
+  ignore_changes = [
+    set
+  ]
+}
 }
