@@ -213,3 +213,13 @@ variable "aws_lb_controller_service_account_name" {
   description = "K8s service account name for AWS Load Balancer Controller"
   type        = string
 }
+
+variable "endpoint_public_access" {
+  description = "Whether to enable public access to the EKS API endpoint"
+  type        = bool
+}
+
+variable "endpoint_private_access" {
+  description = "Whether to enable private access to the EKS API endpoint"
+  type        = bool
+}

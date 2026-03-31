@@ -44,3 +44,13 @@ variable "admin_sg_id" {
   type        = string
   default = null
 }
+
+variable "endpoint_public_access" {
+  description = "Whether to enable public access to the EKS API endpoint"
+  type        = bool
+}
+
+variable "endpoint_private_access" {
+  description = "Whether to enable private access to the EKS API endpoint"
+  type        = bool
+}

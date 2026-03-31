@@ -110,6 +110,9 @@ module "EKS" {
 
   cluster_name        = var.cluster_name
   vpc_id              = module.vpc.vpc_id
+  endpoint_public_access = var.endpoint_public_access
+  endpoint_private_access = var.endpoint_private_access
+
   private_subnet_ids  = module.vpc.private_subnet_ids
   admin_sg_id         = aws_security_group.ec2_sg.id
 
