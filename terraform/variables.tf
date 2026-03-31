@@ -189,13 +189,13 @@ variable "secret_name" {
   type        = string
 }
 
-variable "namespace" {
-  description = "K8s namespace for backend"
+variable "secrets_manager_namespace" {
+  description = "K8s namespace for Secrets Manager"
   type        = string
 }
 
-variable "service_account_name" {
-  description = "K8s service account name"
+variable "secrets_manager_service_account_name" {
+  description = "K8s service account name for Secrets Manager"
   type        = string
 }
 

@@ -131,8 +131,8 @@ module "secrets_manager" {
   db_username             = var.username
   db_password             = var.password
   secret_name             = var.secret_name
-  namespace               = var.namespace
-  service_account_name    = var.service_account_name
+  namespace               = var.secrets_manager_namespace
+  service_account_name    = var.secrets_manager_service_account_name
 
   tags = var.tags
 }
