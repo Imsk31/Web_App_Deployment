@@ -183,3 +183,23 @@ variable "min_size" {
   description = "Minimum number of worker nodes in the node group"
   type        = number
 }
+
+variable "secret_name" {
+  description = "Secrets Manager secret name"
+  type        = string
+}
+
+variable "namespace" {
+  description = "K8s namespace for backend"
+  type        = string
+}
+
+variable "service_account_name" {
+  description = "K8s service account name"
+  type        = string
+}
+
+variable "recovery_window_in_days" {
+  description = "Recovery window in days"
+  type = number
+}

@@ -120,3 +120,19 @@ module "EKS" {
 
   tags = var.tags
 }
+
+module "secrets_manager" {
+  source = "./modules/AWSSecretsManager"
+
+  cluster_name            = var.cluster_name
+  region                  = var.region
+  cluster_oidc_issuer_url = module.EKS.cluster_oidc_issuer_url
+  recovery_window_in_days = var.recovery_window_in_days
+  db_username             = var.username
+  db_password             = var.password
+  secret_name             = var.secret_name
+  namespace               = var.namespace
+  service_account_name    = var.service_account_name
+
+  tags = var.tags
+}
