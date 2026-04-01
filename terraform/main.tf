@@ -124,12 +124,36 @@ module "EKS" {
   tags = var.tags
 }
 
+module "oidc" {
+  source                  = "./modules/OIDC"
+  cluster_oidc_issuer_url = module.EKS.cluster_oidc_issuer_url
+
+tags = var.tags
+}
+
+module "aws_lb_controller" {
+  source = "./modules/aws_lb_controller"
+
+  cluster_name         = var.cluster_name
+  oidc_provider_arn    = module.oidc.oidc_provider_arn   
+  oidc_issuer_url      = module.oidc.oidc_issuer_url     
+  region               = var.region
+  vpc_id               = module.vpc.vpc_id
+  namespace            = var.aws_lb_controller_namespace
+  service_account_name = var.aws_lb_controller_service_account_name
+
+  depends_on = [module.EKS, module.oidc]                  
+
+  tags = var.tags
+}
+
 module "secrets_manager" {
   source = "./modules/AWSSecretsManager"
 
   cluster_name            = var.cluster_name
   region                  = var.region
-  cluster_oidc_issuer_url = module.EKS.cluster_oidc_issuer_url
+  oidc_issuer_url         = module.oidc.oidc_issuer_url
+  oidc_provider_arn       = module.oidc.oidc_provider_arn
   recovery_window_in_days = var.recovery_window_in_days
   db_username             = var.username
   db_password             = var.password
@@ -137,21 +161,7 @@ module "secrets_manager" {
   namespace               = var.secrets_manager_namespace
   service_account_name    = var.secrets_manager_service_account_name
 
-  depends_on = [ module.EKS ]
-
-  tags = var.tags
-}
-
-module "aws_lb_controller" {
-  source = "./modules/aws_lb_controller"
-
-  cluster_name         = var.cluster_name
-  oidc_provider_arn    = module.secrets_manager.oidc_provider_arn
-  oidc_issuer_url      = module.EKS.cluster_oidc_issuer_url
-  namespace            = var.aws_lb_controller_namespace
-  service_account_name = var.aws_lb_controller_service_account_name
-
-  depends_on = [ module.EKS ]
+  depends_on = [module.EKS, module.oidc]
 
   tags = var.tags
 }

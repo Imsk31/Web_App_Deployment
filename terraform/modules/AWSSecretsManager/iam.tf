@@ -2,8 +2,9 @@
 # IAM Role for Service Account (IRSA)
 # — lets the backend pod read the secret
 # -------------------------------------------------------
+
 locals {
-  oidc_provider = replace(aws_iam_openid_connect_provider.eks.url, "https://", "")
+  oidc_provider = replace(var.oidc_issuer_url, "https://", "")
 }
 
 data "aws_iam_policy_document" "irsa_assume_role" {
@@ -13,7 +14,7 @@ data "aws_iam_policy_document" "irsa_assume_role" {
 
     principals {
       type        = "Federated"
-      identifiers = [aws_iam_openid_connect_provider.eks.arn]
+      identifiers = [var.oidc_provider_arn]
     }
 
     condition {

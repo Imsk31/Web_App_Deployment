@@ -3,6 +3,16 @@ variable "cluster_name" {
   type        = string
 }
 
+variable "region" {
+  description = "AWS Region"
+  type        = string
+}
+
+variable "vpc_id" {
+  description = "VPC ID where EKS cluster is deployed"
+  type        = string
+}
+
 variable "oidc_provider_arn" {
   description = "OIDC provider ARN from EKS cluster"
   type        = string
