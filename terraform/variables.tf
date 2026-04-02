@@ -223,3 +223,8 @@ variable "endpoint_private_access" {
   description = "Whether to enable private access to the EKS API endpoint"
   type        = bool
 }
+
+variable "environment" {
+  description = "Deployment environment (e.g., dev, prod)"
+  type = string
+}

@@ -64,8 +64,12 @@ variable "db_subnet_group_name" {
   description = "Name of the DB subnet group"
   type = string 
 }
-variable "vpc_security_group_ids" {
-  description = "List of VPC security group IDs for the RDS instance"
+variable "source_security_group_ids" {
+  description = "List of source security group IDs for the RDS instance"
+  type = list(string)
+}
+variable "allowed_cidr_blocks" {
+  description = "List of allowed CIDR blocks for the RDS instance"
   type = list(string)
 }
 variable "subnet_ids" {

@@ -37,13 +37,6 @@ resource "aws_security_group" "ec2_sg" {
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
-  ingress {
-    description = "Allow DataBase access"
-    from_port   = 3306
-    to_port     = 3306
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
 
   egress {
     description = "Allow all outbound traffic"
@@ -75,6 +68,10 @@ module "ec2" {
   tags                = var.tags
 }
 
+data "http" "my_ip" {
+  url = "https://ifconfig.me/ip"
+}
+
 module "RDS" {
   source = "./modules/RDS"
 
@@ -86,12 +83,15 @@ module "RDS" {
   storage_type      = var.storage_type
   storage_encrypted = var.storage_encrypted
 
-  vpc_id                 = module.vpc.vpc_id
-  vpc_security_group_ids = [aws_security_group.ec2_sg.id]
-  multi_az               = var.multi_az
-  publicly_accessible    = var.publicly_accessible
-  subnet_ids             = module.vpc.private_subnet_ids
-  db_subnet_group_name   = var.db_subnet_group_name
+  vpc_id                    = module.vpc.vpc_id
+  source_security_group_ids = [aws_security_group.ec2_sg.id, module.EKS.worker_security_group_id]
+  allowed_cidr_blocks       = var.environment == "dev" ? ["${trimspace(data.http.my_ip.response_body)}/32"] : []
+
+  multi_az                     = var.multi_az
+  publicly_accessible          = var.publicly_accessible
+  # subnet_ids                 = module.vpc.private_subnet_ids
+  subnet_ids = var.environment == "dev" ? module.vpc.public_subnet_ids : module.vpc.private_subnet_ids
+  db_subnet_group_name         = var.db_subnet_group_name
 
 
   username             = var.username
@@ -108,9 +108,9 @@ module "RDS" {
 module "EKS" {
   source = "./modules/EKS_Cluster"
 
-  cluster_name        = var.cluster_name
-  vpc_id              = module.vpc.vpc_id
-  endpoint_public_access = var.endpoint_public_access
+  cluster_name            = var.cluster_name
+  vpc_id                  = module.vpc.vpc_id
+  endpoint_public_access  = var.endpoint_public_access
   endpoint_private_access = var.endpoint_private_access
 
   private_subnet_ids  = module.vpc.private_subnet_ids
@@ -135,14 +135,12 @@ module "aws_lb_controller" {
   source = "./modules/aws_lb_controller"
 
   cluster_name         = var.cluster_name
-  oidc_provider_arn    = module.oidc.oidc_provider_arn   
-  oidc_issuer_url      = module.oidc.oidc_issuer_url     
-  region               = var.region
-  vpc_id               = module.vpc.vpc_id
+  oidc_provider_arn    = module.oidc.oidc_provider_arn
+  oidc_issuer_url      = module.oidc.oidc_issuer_url
   namespace            = var.aws_lb_controller_namespace
   service_account_name = var.aws_lb_controller_service_account_name
 
-  depends_on = [module.EKS, module.oidc]                  
+  depends_on = [module.EKS, module.oidc]
 
   tags = var.tags
 }
@@ -151,7 +149,6 @@ module "secrets_manager" {
   source = "./modules/AWSSecretsManager"
 
   cluster_name            = var.cluster_name
-  region                  = var.region
   oidc_issuer_url         = module.oidc.oidc_issuer_url
   oidc_provider_arn       = module.oidc.oidc_provider_arn
   recovery_window_in_days = var.recovery_window_in_days
@@ -161,7 +158,7 @@ module "secrets_manager" {
   namespace               = var.secrets_manager_namespace
   service_account_name    = var.secrets_manager_service_account_name
 
-  depends_on = [module.EKS, module.oidc]
+  depends_on = [module.EKS, module.oidc, module.aws_lb_controller]
 
   tags = var.tags
 }

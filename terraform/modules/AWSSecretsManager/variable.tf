@@ -40,11 +40,6 @@ variable "service_account_name" {
   type        = string
 }
 
-variable "region" {
-  description = "AWS region"
-  type        = string
-}
-
 variable "identifier" {
   description = "RDS Instance Identifier"
   type = string
