@@ -9,12 +9,7 @@ if [ -z "$CLUSTER_NAME" ] || [ -z "$REGION" ]; then
   exit 1
 fi
 
-echo "=== [1/3] Configuring kubectl ==="
-aws eks update-kubeconfig \
-  --region $REGION \
-  --name $CLUSTER_NAME
-
-echo "=== [2/3] Checking LB Controller is running ==="
+echo "=== [1/2] Checking LB Controller is running ==="
 LB_READY=$(kubectl get pods -n kube-system \
   --selector=app.kubernetes.io/name=aws-load-balancer-controller \
   --field-selector=status.phase=Running \
@@ -28,7 +23,7 @@ fi
 
 echo "LB Controller is running — proceeding"
 
-echo "=== [3/3] Installing External Secrets Operator via Helm ==="
+echo "=== [2/2] Installing External Secrets Operator via Helm ==="
 helm repo add external-secrets https://charts.external-secrets.io
 helm repo update
 
