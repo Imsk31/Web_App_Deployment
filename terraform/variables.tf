@@ -228,3 +228,9 @@ variable "environment" {
   description = "Deployment environment (e.g., dev, prod)"
   type = string
 }
+
+variable "grafana_password" {
+  description = "Grafana admin password"
+  type        = string
+  sensitive   = true
+}

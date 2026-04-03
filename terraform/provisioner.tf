@@ -19,7 +19,11 @@ resource "null_resource" "cluster_setup" {
         --timeout=300s && \
       bash ${path.module}/scripts/install-eso.sh \
         ${var.cluster_name} \
-        ${var.region}
+        ${var.region}\
+      bash ${path.module}/scripts/install-monitoring.sh \
+        ${var.cluster_name} \
+        ${var.region} \
+        ${var.grafana_password}
     EOT
   }
 
