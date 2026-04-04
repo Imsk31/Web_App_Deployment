@@ -13,8 +13,8 @@ resource "null_resource" "cluster_setup" {
         ${module.vpc.vpc_id} && \
       bash ${path.module}/scripts/install-eso.sh \
         ${var.cluster_name} \
-        ${var.region}\
-      bash ${path.module}/scripts/install-monitoring.sh \
+        ${var.region} && \
+      bash ${path.module}/scripts/monitoring.sh \
         ${var.cluster_name} \
         ${var.region} \
         ${var.grafana_password}
