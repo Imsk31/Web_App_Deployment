@@ -38,6 +38,10 @@ output "cluster_security_group_id" {
   value = module.EKS.cluster_security_group_id
 }
 
+output "irsa_role_arn" {
+  value = module.secrets_manager.irsa_role_arn
+}
+
 output "worker_security_group_id" {
   value = module.EKS.worker_security_group_id
 }

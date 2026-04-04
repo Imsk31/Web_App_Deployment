@@ -17,7 +17,12 @@ resource "null_resource" "cluster_setup" {
       bash ${path.module}/scripts/monitoring.sh \
         ${var.cluster_name} \
         ${var.region} \
-        ${var.grafana_password}
+        ${var.grafana_password} && \
+      bash ${path.module}/scripts/conf-manifest-apply.sh \
+        $(cd terraform && terraform output -raw irsa_role_arn) \
+        $(cd terraform && terraform output -raw secret_name) \
+        ${var.region} \
+        $(cd terraform && terraform output -raw RDS_Endpoint | cut -d: -f1)
     EOT
   }
 
