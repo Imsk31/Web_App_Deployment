@@ -16,6 +16,9 @@ aws eks update-kubeconfig \
   --region $REGION \
   --name $CLUSTER_NAME
 
+echo "=== Waiting for nodes to be Ready ==="
+kubectl wait --for=condition=Ready nodes --all --timeout=300s
+
 echo "=== [2/3] Creating LB Controller Service Account ==="
 kubectl apply -f - <<EOF
 apiVersion: v1
