@@ -9,6 +9,7 @@ resource "aws_instance" "main" {
   subnet_id               = var.subnet_id
   vpc_security_group_ids  = var.security_group_ids
   key_name = var.key_name
+  user_data = var.user_data
 
   root_block_device {
     volume_size = var.volume_size

@@ -47,3 +47,8 @@ variable "volume_type" {
   description = "The type of the root volume"
   type        = string
 }
+
+variable "user_data" {
+  description = "User data script to initialize the EC2 instance"
+  type        = string
+}
