@@ -65,7 +65,7 @@ module "ec2" {
   security_group_ids  = [aws_security_group.ec2_sg.id]
   volume_size         = var.volume_size
   volume_type         = var.volume_type
-  user_data           = file("${path.module}/user_data.sh")
+  user_data           = file("${path.root}/user_data.sh")
   tags                = var.tags
 }
 
