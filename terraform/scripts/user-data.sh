@@ -14,6 +14,10 @@ rm -rf awscliv2.zip aws/
 sudo apt update
 sudo apt install openjdk-17-jre -y
 
+#Creatig Jenkins Directory and giving permissions to the user
+sudo mkdir -p /var/lib/jenkins
+sudo chown -R $USER:$USER /var/lib/jenkins
+
 # Add Docker's official GPG key
 sudo apt-get update -y
 sudo apt-get install -y ca-certificates curl
