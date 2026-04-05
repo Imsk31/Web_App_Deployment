@@ -50,3 +50,7 @@ output "secret_name" {
   value = module.secrets_manager.secret_name
   sensitive = true
 }
+
+output "lb_role_arn" {
+  value = module.aws_lb_controller.lb_controller_role_arn
+}

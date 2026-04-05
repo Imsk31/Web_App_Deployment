@@ -5,11 +5,11 @@ set -e
 IRSA_ROLE_ARN=$1
 SECRET_NAME=$2
 REGION=$3
-DB_HOST=$4
+RDS_ENDPOINT=$4
 
 # ── Validation ───────────────────────────────────────
-if [ -z "$IRSA_ROLE_ARN" ] || [ -z "$SECRET_NAME" ] || [ -z "$REGION" ] || [ -z "$DB_HOST" ]; then
-  echo "Usage: bash conf-manifest-apply.sh <irsa_role_arn> <secret_name> <region> <db_host>"
+if [ -z "$IRSA_ROLE_ARN" ] || [ -z "$SECRET_NAME" ] || [ -z "$REGION" ] || [ -z "$RDS_ENDPOINT" ]; then
+  echo "Usage: bash conf-manifest-apply.sh <irsa_role_arn> <secret_name> <region> <RDS_Endpoint>"
   exit 1
 fi
 
@@ -33,7 +33,7 @@ metadata:
   name: ${CONFIGMAP_NAME}
   namespace: ${NAMESPACE}
 data:
-  DB_HOST: "${DB_HOST}"
+  DB_HOST: "${RDS_ENDPOINT}"
   config.json: |
     {
       "backendApiUrl": "${BACKEND_API_URL}"
