@@ -45,3 +45,8 @@ output "irsa_role_arn" {
 output "worker_security_group_id" {
   value = module.EKS.worker_security_group_id
 }
+
+output "secret_name" {
+  value = module.secrets_manager.secret_name
+  sensitive = true
+}
