@@ -7,7 +7,7 @@ LB_ROLE_ARN=$3
 VPC_ID=$4
 
 if [ -z "$CLUSTER_NAME" ] || [ -z "$REGION" ] || [ -z "$LB_ROLE_ARN" ] || [ -z "$VPC_ID" ]; then
-  echo "Usage: bash install-lb-controller.sh <cluster-name> <region> <lb-role-arn> <vpc-id>"
+  echo "Usage: bash install-lb-controller.sh <cluster_name> <region> <lb_role_arn> <vpc_id>"
   exit 1
 fi
 

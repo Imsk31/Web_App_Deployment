@@ -9,7 +9,7 @@ DB_HOST=$4
 
 # ── Validation ───────────────────────────────────────
 if [ -z "$IRSA_ROLE_ARN" ] || [ -z "$SECRET_NAME" ] || [ -z "$REGION" ] || [ -z "$DB_HOST" ]; then
-  echo "Usage: bash apply-manifests.sh <irsa-role-arn> <secret-name> <region> <db-host>"
+  echo "Usage: bash conf-manifest-apply.sh <irsa_role_arn> <secret_name> <region> <db_host>"
   exit 1
 fi
 
@@ -22,10 +22,10 @@ BACKEND_API_URL="/api/v1/workers"
 CONFIGMAP_NAME="app-config"
 
 # ── Apply ─────────────────────────────────────────────
-echo "=== [1/8] Creating namespace ==="
+echo "=== [1/6] Creating namespace ==="
 kubectl apply -f manifests/namespace.yaml
 
-echo "=== [2/8] Applying ConfigMap ==="
+echo "=== [2/6] Applying ConfigMap ==="
 cat <<EOF | kubectl apply -f -
 apiVersion: v1
 kind: ConfigMap
@@ -40,7 +40,7 @@ data:
     }
 EOF
 
-echo "=== [3/8] Applying ServiceAccount ==="
+echo "=== [3/6] Applying ServiceAccount ==="
 cat <<EOF | kubectl apply -f -
 apiVersion: v1
 kind: ServiceAccount
@@ -51,7 +51,7 @@ metadata:
     eks.amazonaws.com/role-arn: ${IRSA_ROLE_ARN}
 EOF
 
-echo "=== [4/8] Applying SecretStore ==="
+echo "=== [4/6] Applying SecretStore ==="
 cat <<EOF | kubectl apply -f -
 apiVersion: external-secrets.io/v1beta1
 kind: SecretStore
@@ -69,7 +69,7 @@ spec:
             name: ${SERVICE_ACCOUNT_NAME}
 EOF
 
-echo "=== [5/8] Applying ExternalSecret ==="
+echo "=== [5/6] Applying ExternalSecret ==="
 cat <<EOF | kubectl apply -f -
 apiVersion: external-secrets.io/v1beta1
 kind: ExternalSecret
@@ -95,29 +95,24 @@ spec:
         property: password
 EOF
 
-echo "=== [6/8] Waiting for secret sync ==="
+echo "=== [6/6] Waiting for secret sync ==="
 kubectl wait externalsecret ${EXTERNAL_SECRET_NAME} \
   -n ${NAMESPACE} \
   --for=condition=Ready \
   --timeout=120s
 
-echo "=== [7/8] Deploying applications ==="
-kubectl apply -f spring-backend/manifest/
-kubectl apply -f angular-frontend/manifest/
-kubectl apply -f ingress.yaml
-
-echo "=== [8/8] Waiting for rollout ==="
-kubectl rollout status deployment/backend \
-  -n ${NAMESPACE} --timeout=120s
-kubectl rollout status deployment/frontend \
-  -n ${NAMESPACE} --timeout=120s
-
 echo ""
-echo "✅ All manifests applied successfully"
-echo ""
-echo "=== Pods ==="
-kubectl get pods -n ${NAMESPACE}
+echo "All cluster configurationmanifests applied successfully"
 
-echo ""
-echo "=== ALB DNS (wait 2-3 mins) ==="
-kubectl get ingress -n ${NAMESPACE}
+echo "Checking ConfigMap status:"
+kubectl get configmap ${CONFIGMAP_NAME} -n ${NAMESPACE} -o yaml
+
+echo "Checking ExternalSecret status:"
+kubectl get externalsecret ${EXTERNAL_SECRET_NAME} -n ${NAMESPACE} -o yaml
+
+echo "Checking Secret status:"
+kubectl get secret ${EXTERNAL_SECRET_NAME} -n ${NAMESPACE} -o yaml
+
+echo "Checking ServiceAccount status:"
+kubectl get serviceaccount ${SERVICE_ACCOUNT_NAME} -n ${NAMESPACE} -o yaml
+

@@ -1,5 +1,6 @@
 #!/bin/sh
 
+USER_NAME="ubuntu"
 # Install AWS CLI
 curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
 sudo apt-get update 
@@ -16,7 +17,8 @@ sudo apt install openjdk-17-jre -y
 
 #Creatig Jenkins Directory and giving permissions to the user
 sudo mkdir -p /var/lib/jenkins
-sudo chown -R $USER:$USER /var/lib/jenkins
+sudo su ubuntu -c "mkdir -p /var/lib/jenkins"
+sudo chown -R $USER_NAME:$USER_NAME /var/lib/jenkins
 
 # Add Docker's official GPG key
 sudo apt-get update -y
