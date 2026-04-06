@@ -40,6 +40,6 @@ helm upgrade --install external-secrets \
 
 echo ""
 echo "=== Verifying ESO ==="
-kubectl get pods -n ${NAMESPACE}
+kubectl get pods -n ${NAMESPACE} | grep external-secrets
 echo ""
 echo "ESO installed successfully"

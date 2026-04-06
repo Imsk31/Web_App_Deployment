@@ -1,12 +1,8 @@
 #!/bin/bash
 set -e
 
-GRAFANA_PASSWORD=$1
-
-if [ -z "$GRAFANA_PASSWORD" ]; then
-  echo "Usage: bash install-monitoring.sh <grafana-password>"
-  exit 1
-fi
+# ── Variables ────────────────────────────────────────
+NAMESPACE="webapp"
 
 echo "=== [1/2] Adding Prometheus Helm repo ==="
 helm repo add prometheus-community \
@@ -16,9 +12,7 @@ helm repo update
 echo "=== [2/2] Installing Prometheus + Grafana ==="
 helm upgrade --install kube-prometheus-stack \
   prometheus-community/kube-prometheus-stack \
-  --namespace monitoring \
-  --create-namespace \
-  --set grafana.adminPassword=$GRAFANA_PASSWORD \
+  --namespace ${NAMESPACE} \
   --set grafana.enabled=true \
   --set alertmanager.enabled=true \
   --set nodeExporter.enabled=true \
@@ -26,6 +20,12 @@ helm upgrade --install kube-prometheus-stack \
   --wait \
   --timeout 300s
 
+echo "Fowarding Grafana port to :3000"
+kubectl port-forward svc/kube-prometheus-stack-grafana 3000:80 -n ${NAMESPACE}
+
+echo ""
+echo "=== Verifying Prometheus + Grafana ==="
+kubectl get pods -n ${NAMESPACE} | grep kube-prometheus-stack
+
 echo ""
 echo "Prometheus + Grafana installed successfully"
-echo "Run: kubectl port-forward svc/kube-prometheus-stack-grafana 3000:80 -n monitoring"
