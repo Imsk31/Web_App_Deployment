@@ -93,6 +93,7 @@ spec:
         property: password
 EOF
 
+
 echo "=== [5/5] Waiting for secret sync ==="
 
 for i in {1..10}; do
@@ -106,6 +107,7 @@ for i in {1..10}; do
   echo "Waiting for ExternalSecret... ($i/10)"
   sleep 10
 done
+
 
 echo "ExternalSecret not ready in time"
 exit 1
