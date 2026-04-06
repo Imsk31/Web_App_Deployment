@@ -23,7 +23,7 @@ CONFIGMAP_NAME="app-config"
 
 # ── Apply ─────────────────────────────────────────────
 
-echo "=== [2/6] Applying ConfigMap ==="
+echo "=== [1/5] Applying ConfigMap ==="
 cat <<EOF | kubectl apply -f -
 apiVersion: v1
 kind: ConfigMap
@@ -38,7 +38,7 @@ data:
     }
 EOF
 
-echo "=== [3/6] Applying ServiceAccount ==="
+echo "=== [2/5] Applying ServiceAccount ==="
 cat <<EOF | kubectl apply -f -
 apiVersion: v1
 kind: ServiceAccount
@@ -49,7 +49,7 @@ metadata:
     eks.amazonaws.com/role-arn: ${IRSA_ROLE_ARN}
 EOF
 
-echo "=== [4/6] Applying SecretStore ==="
+echo "=== [3/5] Applying SecretStore ==="
 cat <<EOF | kubectl apply -f -
 apiVersion: external-secrets.io/v1beta1
 kind: SecretStore
@@ -67,7 +67,7 @@ spec:
             name: ${SERVICE_ACCOUNT_NAME}
 EOF
 
-echo "=== [5/6] Applying ExternalSecret ==="
+echo "=== [4/5] Applying ExternalSecret ==="
 cat <<EOF | kubectl apply -f -
 apiVersion: external-secrets.io/v1beta1
 kind: ExternalSecret
@@ -93,7 +93,7 @@ spec:
         property: password
 EOF
 
-echo "=== [6/6] Waiting for secret sync ==="
+echo "=== [5/5] Waiting for secret sync ==="
 kubectl wait externalsecret ${EXTERNAL_SECRET_NAME} \
   -n ${NAMESPACE} \
   --for=condition=Ready \
