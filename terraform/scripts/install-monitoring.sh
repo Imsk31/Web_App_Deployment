@@ -20,10 +20,6 @@ helm upgrade --install kube-prometheus-stack \
   --wait \
   --timeout 300s
 
-echo "Fowarding Grafana port to :3000"
-kubectl port-forward svc/kube-prometheus-stack-grafana 3000:80 -n ${NAMESPACE}
-
-echo ""
 echo "=== Verifying Prometheus + Grafana ==="
 kubectl get pods -n ${NAMESPACE} | grep kube-prometheus-stack
 
