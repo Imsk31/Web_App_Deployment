@@ -4,6 +4,9 @@ set -e
 CLUSTER_NAME=$1
 REGION=$2
 
+# ── Variables ────────────────────────────────────────
+NAMESPACE="webapp"
+
 if [ -z "$CLUSTER_NAME" ] || [ -z "$REGION" ]; then
   echo "Usage: bash install-eso.sh <cluster-name> <region>"
   exit 1
@@ -29,8 +32,7 @@ helm repo update
 
 helm upgrade --install external-secrets \
   external-secrets/external-secrets \
-  --namespace external-secrets \
-  --create-namespace \
+  --namespace ${NAMESPACE} \
   --set installCRDs=true \
   --version 0.9.13 \
   --wait \
@@ -38,6 +40,6 @@ helm upgrade --install external-secrets \
 
 echo ""
 echo "=== Verifying ESO ==="
-kubectl get pods -n external-secrets
+kubectl get pods -n ${NAMESPACE}
 echo ""
 echo "ESO installed successfully"
