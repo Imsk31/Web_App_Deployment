@@ -13,7 +13,7 @@ if [ -z "$CLUSTER_NAME" ] || [ -z "$REGION" ]; then
 fi
 
 echo "=== [1/3] Creating namespace ==="
-kubectl apply -f manifests/namespace.yaml
+kubectl create namespace ${NAMESPACE} || echo "Namespace ${NAMESPACE} already exists"
 
 echo "=== [2/3] Checking LB Controller is running ==="
 LB_READY=$(kubectl get pods -n kube-system \
