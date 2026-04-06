@@ -1,3 +1,9 @@
+
+resource "aws_eip" "name" {
+  instance = aws_instance.main.id
+  domain = "vpc"
+}
+
 resource "aws_key_pair" "key_pair" {
   key_name    = var.key_name
   public_key  = file(var.public_key_path)
