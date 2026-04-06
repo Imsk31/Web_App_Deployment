@@ -94,10 +94,21 @@ spec:
 EOF
 
 echo "=== [5/5] Waiting for secret sync ==="
-kubectl wait externalsecret ${EXTERNAL_SECRET_NAME} \
-  -n ${NAMESPACE} \
-  --for=condition=Ready \
-  --timeout=120s
+
+for i in {1..10}; do
+  STATUS=$(kubectl get externalsecret springbackend-db-secret -n ${NAMESPACE} -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}')
+
+  if [ "$STATUS" = "True" ]; then
+    echo "ExternalSecret is Ready"
+    exit 0
+  fi
+
+  echo "Waiting for ExternalSecret... ($i/10)"
+  sleep 10
+done
+
+echo "ExternalSecret not ready in time"
+exit 1
 
 echo ""
 echo "All cluster configurationmanifests applied successfully"
