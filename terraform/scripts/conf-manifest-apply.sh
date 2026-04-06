@@ -22,8 +22,6 @@ BACKEND_API_URL="/api/v1/workers"
 CONFIGMAP_NAME="app-config"
 
 # ── Apply ─────────────────────────────────────────────
-echo "=== [1/6] Creating namespace ==="
-kubectl apply -f manifests/namespace.yaml
 
 echo "=== [2/6] Applying ConfigMap ==="
 cat <<EOF | kubectl apply -f -
