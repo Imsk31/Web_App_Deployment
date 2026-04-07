@@ -117,7 +117,7 @@ resource "aws_route_table" "private" {
   count         = length((aws_subnet.private_subnet))
   vpc_id        = aws_vpc.main.id
   route {
-    gateway_id  = aws_nat_gateway.nat[count.index].id
+    nat_gateway_id  = aws_nat_gateway.nat[count.index].id
     cidr_block  = "0.0.0.0/0"
   }
 
