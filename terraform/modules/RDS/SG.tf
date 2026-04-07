@@ -16,17 +16,17 @@ resource "aws_security_group" "rds_sg" {
     security_groups = var.source_security_group_ids
   }
 
-    # Allow access from local machine (dev only)
-  dynamic "ingress" {
-    for_each = length(var.allowed_cidr_blocks) > 0 ? [1] : []
-    content {
-      description = "Allow DB access from local machine"
-      from_port   = 3306
-      to_port     = 3306
-      protocol    = "tcp"
-      cidr_blocks = var.allowed_cidr_blocks
-    }
-  }
+  #   # Allow access from local machine (dev only)
+  # dynamic "ingress" {
+  #   for_each = length(var.allowed_cidr_blocks) > 0 ? [1] : []
+  #   content {
+  #     description = "Allow DB access from local machine"
+  #     from_port   = 3306
+  #     to_port     = 3306
+  #     protocol    = "tcp"
+  #     cidr_blocks = var.allowed_cidr_blocks
+  #   }
+  # }
 
   egress {
     description = "Allow all outbound traffic"

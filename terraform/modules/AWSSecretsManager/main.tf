@@ -1,5 +1,6 @@
 # -------------------------------------------------------
 # Secrets Manager — store RDS credentials
+# — lets the backend pod read the secret
 # -------------------------------------------------------
 resource "aws_secretsmanager_secret" "db_secret" {
   name                    = var.secret_name

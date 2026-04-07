@@ -1,3 +1,6 @@
+# -------------------------------------------------------
+# VPC Module - Creates VPC, subnets, and networking
+# -------------------------------------------------------
 module "vpc" {
   source                = "./modules/vpc"
   vpc_name              = var.vpc_name
@@ -11,49 +14,9 @@ module "vpc" {
   tags                  = var.tags
 }
 
-resource "aws_security_group" "ec2_sg" {
-  name        = "${var.instance_name}-sg"
-  description = "EC2 security group"
-  vpc_id = module.vpc.vpc_id
-
-  ingress {
-    description = "Allow SSH"
-    from_port   = 22
-    to_port     = 22
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-  ingress {
-    description = "Allow HTTP"
-    from_port   = 80
-    to_port     = 80
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-  ingress {
-    description = "Allow HTTPS"
-    from_port   = 443
-    to_port     = 443
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  egress {
-    description = "Allow all outbound traffic"
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
- }
-
-  tags = merge(
-    {
-      Name = "${var.instance_name}-sg"
-    },
-    var.tags
-  )
-}
-
+# -------------------------------------------------------
+# EC2 Module - Provisions EC2 instance
+# -------------------------------------------------------
 module "ec2" {
   source              = "./modules/ec2"
   ami_id              = var.ami_id
@@ -65,14 +28,16 @@ module "ec2" {
   security_group_ids  = [aws_security_group.ec2_sg.id]
   volume_size         = var.volume_size
   volume_type         = var.volume_type
-  user_data           = file("${path.root}/scripts/user-data.sh")
   tags                = var.tags
 }
 
-data "http" "my_ip" {
-  url = "https://ifconfig.me/ip"
-}
+# data "http" "my_ip" {
+#   url = "https://ifconfig.me/ip"
+# }
 
+# -------------------------------------------------------
+# RDS Module - Creates RDS database instance
+# -------------------------------------------------------
 module "RDS" {
   source = "./modules/RDS"
 
@@ -85,13 +50,13 @@ module "RDS" {
   storage_encrypted = var.storage_encrypted
 
   vpc_id                    = module.vpc.vpc_id
-  source_security_group_ids = [aws_security_group.ec2_sg.id, module.EKS.worker_security_group_id]
-  allowed_cidr_blocks       = var.environment == "dev" ? ["${trimspace(data.http.my_ip.response_body)}/32"] : []
+  source_security_group_ids = [aws_security_group.ec2_sg.id, module.EKS.node_security_group_id]
+  # allowed_cidr_blocks       = var.environment == "dev" ? ["${trimspace(data.http.my_ip.response_body)}/32"] : []
 
   multi_az                     = var.multi_az
   publicly_accessible          = var.publicly_accessible
-  # subnet_ids                 = module.vpc.private_subnet_ids
-  subnet_ids = var.environment == "dev" ? module.vpc.public_subnet_ids : module.vpc.private_subnet_ids
+  subnet_ids                   = module.vpc.private_subnet_ids
+  # subnet_ids = var.environment == "dev" ? module.vpc.public_subnet_ids : module.vpc.private_subnet_ids
   db_subnet_group_name         = var.db_subnet_group_name
 
 
@@ -106,6 +71,9 @@ module "RDS" {
   tags = var.tags
 }
 
+# -------------------------------------------------------
+# EKS Module - Creates EKS cluster and node group
+# -------------------------------------------------------
 module "EKS" {
   source = "./modules/EKS_Cluster"
 
@@ -125,6 +93,9 @@ module "EKS" {
   tags = var.tags
 }
 
+# -------------------------------------------------------
+# OIDC Module - Sets up OIDC provider for EKS
+# -------------------------------------------------------
 module "oidc" {
   source                  = "./modules/OIDC"
   cluster_oidc_issuer_url = module.EKS.cluster_oidc_issuer_url
@@ -132,6 +103,9 @@ module "oidc" {
 tags = var.tags
 }
 
+# -------------------------------------------------------
+# AWS Load Balancer Controller Module - Deploys ALB controller
+# -------------------------------------------------------
 module "aws_lb_controller" {
   source = "./modules/aws_lb_controller"
 
@@ -146,6 +120,9 @@ module "aws_lb_controller" {
   tags = var.tags
 }
 
+# -------------------------------------------------------
+# Secrets Manager Module - Manages database secrets
+# -------------------------------------------------------
 module "secrets_manager" {
   source = "./modules/AWSSecretsManager"
 

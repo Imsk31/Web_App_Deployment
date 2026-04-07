@@ -7,6 +7,10 @@ locals {
   oidc_provider = replace(var.oidc_issuer_url, "https://", "")
 }
 
+# -------------------------------------------------------
+# IRSA Assume Role Policy Document
+# -------------------------------------------------------
+
 data "aws_iam_policy_document" "irsa_assume_role" {
   statement {
     effect  = "Allow"
@@ -31,10 +35,18 @@ data "aws_iam_policy_document" "irsa_assume_role" {
   }
 }
 
+# -------------------------------------------------------
+# IAM Role for IRSA
+# -------------------------------------------------------
+
 resource "aws_iam_role" "irsa_role" {
   name               = "${var.cluster_name}-irsa-role"
   assume_role_policy = data.aws_iam_policy_document.irsa_assume_role.json
 }
+
+# -------------------------------------------------------
+# Secrets Manager Read Policy
+# -------------------------------------------------------
 
 resource "aws_iam_policy" "secrets_read_policy" {
   name        = "${var.cluster_name}-secrets-policy"
@@ -51,6 +63,10 @@ resource "aws_iam_policy" "secrets_read_policy" {
     ]
   })
 }
+
+# -------------------------------------------------------
+# Attach Secrets Read Policy to IRSA Role
+# -------------------------------------------------------
 
 resource "aws_iam_role_policy_attachment" "irsa_secrets_attach" {
   role       = aws_iam_role.irsa_role.name

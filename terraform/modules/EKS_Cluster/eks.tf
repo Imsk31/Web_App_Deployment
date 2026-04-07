@@ -1,8 +1,14 @@
 ############################################################################################
 # Terraform module for creating an Private EKS cluster and node group
-# This module creates an EKS cluster with a specified name, VPC, and private subnets. It also sets up the necessary IAM roles and policies for the cluster and worker nodes. The node group is configured with desired, maximum, and minimum sizes, as well as the instance types for the worker nodes. The module allows for tagging of resources for better organization and management.
-##############################################################################################
+# This module creates an EKS cluster with a specified name, VPC, and private subnets. 
+# It also sets up the necessary IAM roles and policies for the cluster and worker nodes. 
+# The node group is configured with desired, maximum, and minimum sizes, as well as the instance types for the worker nodes. 
+# The module allows for tagging of resources for better organization and management.
+############################################################################################
 
+# -------------------------------------------------------
+# EKS Cluster Configuration
+# -------------------------------------------------------
 resource "aws_eks_cluster" "main" {
   name     = var.cluster_name
   role_arn = aws_iam_role.eks_cluster_role.arn
@@ -26,6 +32,9 @@ resource "aws_eks_cluster" "main" {
   )
 }
 
+# -------------------------------------------------------
+# EKS Node Group Configuration
+# -------------------------------------------------------
 resource "aws_eks_node_group" "main" {
   cluster_name    = var.cluster_name
   node_group_name = "${var.cluster_name}-node-group"

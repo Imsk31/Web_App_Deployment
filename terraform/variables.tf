@@ -224,7 +224,7 @@ variable "endpoint_private_access" {
   type        = bool
 }
 
-variable "environment" {
-  description = "Deployment environment (e.g., dev, prod)"
-  type = string
-}
+# variable "environment" {
+#   description = "Deployment environment (e.g., dev, prod)"
+#   type = string
+# }

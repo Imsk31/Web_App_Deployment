@@ -71,6 +71,7 @@ variable "source_security_group_ids" {
 variable "allowed_cidr_blocks" {
   description = "List of allowed CIDR blocks for the RDS instance"
   type = list(string)
+  default = [ "null" ]
 }
 variable "subnet_ids" {
   description = "List of subnet IDs for the DB subnet group"
