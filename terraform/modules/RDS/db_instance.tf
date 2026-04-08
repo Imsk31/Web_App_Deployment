@@ -17,7 +17,8 @@ resource "aws_db_instance" "main" {
   publicly_accessible     = var.publicly_accessible
   vpc_security_group_ids  = [aws_security_group.rds_sg.id]
   db_subnet_group_name    = aws_db_subnet_group.main.name
-  identifier              = var.identifier    
+  identifier              = var.identifier
+  db_name = var.db_name   
   
   username = var.username
 

@@ -42,6 +42,7 @@ module "RDS" {
   source = "./modules/RDS"
 
   identifier        = var.identifier
+  db_name = var.db_name
   rds_engine        = var.rds_engine
   engine_version    = var.engine_version
   instance_class    = var.instance_class

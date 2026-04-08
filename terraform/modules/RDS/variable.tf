@@ -2,6 +2,10 @@ variable "identifier" {
   description = "RDS identifier"
   type = string
 }
+variable "db_name" {
+  description = "Name of the database to create"
+  type = string
+}
 variable "rds_engine" {
   description = "RDS engine (e.g., mysql, postgres)"
   type = string
