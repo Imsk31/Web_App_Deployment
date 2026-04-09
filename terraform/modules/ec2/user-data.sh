@@ -62,4 +62,4 @@ sudo apt-get install mysql-client -y
 sudo apt-get install mysql-server -y
 
 # Add the docker group and user
-sudo usermod -aG docker $USER && newgrp docker
+sudo usermod -aG docker ubuntu && newgrp docker
