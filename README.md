@@ -82,6 +82,10 @@ Web_App_Deployment/
 │   ├── frontend-deployment.yaml
 │   ├── ingress.yaml
 │   └── namespace.yaml
+├── Pipelines
+│   ├── CD_Pipeline
+│   ├── CI_Pipeline
+│   └── ClusterConfig_pipeline
 ├── DataBase_Schema/
 │   └── springbackend.sql
 └── terraform/
