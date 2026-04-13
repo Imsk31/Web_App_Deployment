@@ -46,7 +46,7 @@ Internet → IGW → ALB → Ingress resource → Frontend / Backend services �
 
 Prometheus scrapes pod and node metrics. Grafana provides dashboards. Alertmanager routes alerts to AWS SNS, which delivers email notifications.
 
-![Architecture Diagram](./WebApp_AWS_Architecture.jpg)
+![Architecture Diagram](../WebApp_AWS_Architecture.jpg)
 
 ---
 
