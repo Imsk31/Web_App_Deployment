@@ -1,0 +1,135 @@
+pipeline {
+    agent {
+        label 'ssh-agent'
+    }
+
+    environment {
+        BACKEND_IMAGE  = "shubhamsk512/backend"
+        FRONTEND_IMAGE = "shubhamsk512/frontend"
+        TAG            = "latest"
+        FAILED_STAGE   = ""
+        FAILURE_REASON = ""
+    }
+
+    stages {
+
+        stage('SCM') {
+            steps {
+                script {
+                    try {
+                        git branch: 'main', url: 'https://github.com/Imsk31/Web_App_Deployment.git'
+                    } catch (e) {
+                        env.FAILED_STAGE   = "SCM"
+                        env.FAILURE_REASON = e.getMessage()
+                        throw e
+                    }
+                }
+            }
+        }
+
+        stage('Build Backend') {
+            steps {
+                script {
+                    try {
+                        sh '''
+                            echo "=== Building Backend ==="
+                            docker build -t ${BACKEND_IMAGE}:${TAG} ./angular-java/spring-backend
+                        '''
+                    } catch (e) {
+                        env.FAILED_STAGE   = "Build Backend"
+                        env.FAILURE_REASON = e.getMessage()
+
+                        sh '''
+                            echo "=== Build context contents ==="
+                            ls -la ./angular-java/spring-backend/
+                            echo "=== Dockerfile ==="
+                            cat ./angular-java/spring-backend/dockerfile
+                        '''
+                        throw e
+                    }
+                }
+            }
+        }
+
+        stage('Build Frontend') {
+            steps {
+                script {
+                    try {
+                        sh '''
+                            echo "=== Building Frontend ==="
+                            docker build -t ${FRONTEND_IMAGE}:${TAG} ./angular-java/angular-frontend
+                        '''
+                    } catch (e) {
+                        env.FAILED_STAGE   = "Build Frontend"
+                        env.FAILURE_REASON = e.getMessage()
+
+                        sh '''
+                            echo "=== Build context contents ==="
+                            ls -la ./angular-java/angular-frontend/
+                            echo "=== Dockerfile ==="
+                            cat ./angular-java/angular-frontend/dockerfile
+                        '''
+                        throw e
+                    }
+                }
+            }
+        }
+
+        stage('Push Images') {
+            steps {
+                script {
+                    try {
+                        withDockerRegistry(credentialsId: 'Dockerhub_Creds', url: 'https://index.docker.io/v1/') {
+                            sh '''
+                                echo "=== Pushing Backend ==="
+                                docker push ${BACKEND_IMAGE}:${TAG}
+
+                                echo "=== Pushing Frontend ==="
+                                docker push ${FRONTEND_IMAGE}:${TAG}
+                            '''
+                        }
+                    } catch (e) {
+                        env.FAILED_STAGE   = "Push Images"
+                        env.FAILURE_REASON = e.getMessage()
+                        throw e
+                    }
+                }
+            }
+        }
+
+        stage('Verify Images') {
+            steps {
+                sh '''
+                    echo "=== Images built and pushed ==="
+                    docker images | grep -E "backend|frontend"
+                '''
+            }
+        }
+    }
+
+    post {
+        success {
+            echo "Images built and pushed successfully — triggering CD"
+                build job: 'CD_Pipeline',
+                wait: false
+        }
+        failure {
+            echo """
+            ==========================================
+                    CI PIPELINE FAILED
+            ==========================================
+            Failed Stage  : ${env.FAILED_STAGE}
+            Reason        : ${env.FAILURE_REASON}
+            ==========================================
+            """
+        }
+        always {
+            sh '''
+                docker logout || true
+                docker rmi ${BACKEND_IMAGE}:${TAG}  || true
+                docker rmi ${FRONTEND_IMAGE}:${TAG} || true
+            '''
+            cleanWs()
+        }
+    }
+}

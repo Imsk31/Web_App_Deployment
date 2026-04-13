@@ -1,0 +1,225 @@
+pipeline {
+    agent {
+        label 'ssh-agent'
+    }
+
+    environment {
+        NAMESPACE      = "webapp"
+        REGION         = "us-east-1"
+        CLUSTER_NAME   = "production-eks-cluster"
+        BACKEND_IMAGE  = "shubhamsk512/backend"
+        FRONTEND_IMAGE = "shubhamsk512/frontend"
+        FAILED_STAGE   = ""
+        FAILURE_REASON = ""
+    }
+
+    stages {
+
+        stage('SCM') {
+            steps {
+                script {
+                    try {
+                        git branch: 'main', url: 'https://github.com/Imsk31/Web_App_Deployment.git'
+                    } catch (e) {
+                        env.FAILED_STAGE   = "SCM"
+                        env.FAILURE_REASON = e.getMessage()
+                        throw e
+                    }
+                }
+            }
+        }
+
+        stage('AWS Configure') {
+            steps {
+                script {
+                    try {
+                        withCredentials([
+                            string(credentialsId: 'aws_access_key_id',     variable: 'AWS_ACCESS_KEY_ID'),
+                            string(credentialsId: 'aws_secret_access_key', variable: 'AWS_SECRET_ACCESS_KEY')
+                        ]) {
+                            sh '''
+                                aws configure set aws_access_key_id     $AWS_ACCESS_KEY_ID
+                                aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY
+                                aws configure set default.region        $REGION
+
+                                echo "=== Verifying AWS Identity ==="
+                                aws sts get-caller-identity
+
+                                echo "=== Updating kubeconfig ==="
+                                aws eks update-kubeconfig \
+                                    --name   $CLUSTER_NAME \
+                                    --region $REGION
+
+                                echo "=== Verifying cluster access ==="
+                                kubectl get nodes
+                            '''
+                        }
+                    } catch (e) {
+                        env.FAILED_STAGE   = "AWS Configure"
+                        env.FAILURE_REASON = e.getMessage()
+                        throw e
+                    }
+                }
+            }
+        }
+
+        stage('Apply Manifests') {
+            steps {
+                script {
+                    try {
+                        sh '''
+                            echo "=== Applying Manifests ==="
+                            kubectl apply -f manifests/ -n ${NAMESPACE}
+
+                            echo "=== Current State ==="
+                            kubectl get all -n ${NAMESPACE}
+                        '''
+                    } catch (e) {
+                        env.FAILED_STAGE   = "Apply Manifests"
+                        env.FAILURE_REASON = e.getMessage()
+                        throw e
+                    }
+                }
+            }
+        }
+
+        stage('Rollout Backend') {
+            steps {
+                script {
+                    try {
+                        sh '''
+                            echo "=== Restarting Backend ==="
+                            kubectl rollout restart deployment/backend -n ${NAMESPACE}
+
+                            echo "=== Waiting for Backend ==="
+                            kubectl rollout status deployment/backend -n ${NAMESPACE} --timeout=120s
+                        '''
+                    } catch (e) {
+                        env.FAILED_STAGE   = "Rollout Backend"
+                        env.FAILURE_REASON = e.getMessage()
+
+                        sh '''
+                            echo "=== Backend Pod Status ==="
+                            kubectl get pods -n ${NAMESPACE} -l app=backend -o wide
+
+                            echo "=== Backend Pod Logs ==="
+                            kubectl get pods -n ${NAMESPACE} -l app=backend \
+                                -o jsonpath="{.items[*].metadata.name}" | tr " " "\n" | while read pod; do
+                                echo "--- Logs: $pod ---"
+                                kubectl logs "$pod" -n ${NAMESPACE} --tail=80 || true
+                                kubectl logs "$pod" -n ${NAMESPACE} --tail=80 --previous 2>/dev/null || true
+                            done
+
+                            echo "=== Backend Events ==="
+                            kubectl get events -n ${NAMESPACE} \
+                                --sort-by='.lastTimestamp' | tail -10
+                        '''
+                        throw e
+                    }
+                }
+            }
+        }
+
+        stage('Rollout Frontend') {
+            steps {
+                script {
+                    try {
+                        sh '''
+                            echo "=== Restarting Frontend ==="
+                            kubectl rollout restart deployment/frontend -n ${NAMESPACE}
+
+                            echo "=== Waiting for Frontend ==="
+                            kubectl rollout status deployment/frontend -n ${NAMESPACE} --timeout=120s
+                        '''
+                    } catch (e) {
+                        env.FAILED_STAGE   = "Rollout Frontend"
+                        env.FAILURE_REASON = e.getMessage()
+
+                        sh '''
+                            echo "=== Frontend Pod Status ==="
+                            kubectl get pods -n ${NAMESPACE} -l app=frontend -o wide
+
+                            echo "=== Frontend Pod Logs ==="
+                            kubectl get pods -n ${NAMESPACE} -l app=frontend \
+                                -o jsonpath="{.items[*].metadata.name}" | tr " " "\n" | while read pod; do
+                                echo "--- Logs: $pod ---"
+                                kubectl logs "$pod" -n ${NAMESPACE} --tail=80 || true
+                                kubectl logs "$pod" -n ${NAMESPACE} --tail=80 --previous 2>/dev/null || true
+                            done
+
+                            echo "=== Frontend Events ==="
+                            kubectl get events -n ${NAMESPACE} \
+                                --sort-by='.lastTimestamp' | tail -10
+                        '''
+                        throw e
+                    }
+                }
+            }
+        }
+
+        stage('Verify Deployment') {
+            steps {
+                script {
+                    try {
+                        sh '''
+                            echo "=== All Pods ==="
+                            kubectl get pods -n ${NAMESPACE} -o wide
+
+                            echo "=== Deployments ==="
+                            kubectl get deployments -n ${NAMESPACE}
+
+                            echo "=== Services ==="
+                            kubectl get svc -n ${NAMESPACE}
+
+                            echo "=== Ingress ==="
+                            kubectl get ingress -n ${NAMESPACE}
+                        '''
+                    } catch (e) {
+                        env.FAILED_STAGE   = "Verify Deployment"
+                        env.FAILURE_REASON = e.getMessage()
+                        throw e
+                    }
+                }
+            }
+        }
+
+    } // end stages
+
+    post {
+        success {
+            echo "Deployment successful!"
+        }
+        failure {
+            script {
+                echo """
+                ==========================================
+                        CD PIPELINE FAILED
+                ==========================================
+                Failed Stage  : ${env.FAILED_STAGE}
+                Reason        : ${env.FAILURE_REASON}
+                ==========================================
+                """
+                try {
+                    sh '''
+                        echo "=== FINAL POD STATE ==="
+                        kubectl get pods -n ${NAMESPACE} -o wide
+
+                        echo "=== ALL EVENTS ==="
+                        kubectl get events -n ${NAMESPACE} \
+                            --sort-by='.lastTimestamp' | tail -30
+
+                        echo "=== ROLLING BACK ==="
+                        kubectl rollout undo deployment/backend  -n ${NAMESPACE} || true
+                        kubectl rollout undo deployment/frontend -n ${NAMESPACE} || true
+                    '''
+                } catch (ignored) {
+                    echo "Could not collect logs or rollback"
+                }
+            }
+        }
+        always {
+            cleanWs()
+        }
+    }
+
+}

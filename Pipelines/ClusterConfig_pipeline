@@ -1,0 +1,230 @@
+pipeline {
+    agent {
+        label 'ssh-agent'
+    }
+
+    environment {
+        NAMESPACE = "webapp"
+        REGION = "us-east-1"
+        CHECKPOINT = ""
+    }
+
+    stages {
+
+        stage('AWS Configure') {
+            steps {
+                withCredentials([
+                    string(credentialsId: 'aws_access_key_id', variable: 'AWS_ACCESS_KEY_ID'),
+                    string(credentialsId: 'aws_secret_access_key', variable: 'AWS_SECRET_ACCESS_KEY')
+                ]) {
+                    sh '''
+                        aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID
+                        aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY
+                        aws configure set default.region us-east-1
+                    '''
+                }
+            }
+        }
+
+        stage('SCM') {
+            steps {
+                git branch: 'main', url: 'https://github.com/Imsk31/Web_App_Deployment.git'
+            }
+        }
+
+        stage('Terraform Init') {
+            steps {
+                dir('terraform') {
+                    sh 'terraform init'
+                }
+            }
+        }
+
+        stage('Installing AWS Load Balancer Controller') {
+            steps {
+                dir('terraform') {
+                    script {
+                        env.CHECKPOINT = "LB"
+                        def CLUSTER_NAME = sh(script: "terraform output -raw cluster_name", returnStdout: true).trim()
+                        def LB_ROLE_ARN = sh(script: "terraform output -raw lb_role_arn", returnStdout: true).trim()
+                        def VPC_ID = sh(script: "terraform output -raw vpc_id", returnStdout: true).trim()
+
+                        sh """
+                            chmod +x scripts/install-lb-controller.sh
+                            scripts/install-lb-controller.sh \
+                                ${CLUSTER_NAME} \
+                                ${REGION} \
+                                ${LB_ROLE_ARN} \
+                                ${VPC_ID}
+                        """
+                    }
+                }
+            }
+        }
+
+        stage('Installing ESO') {
+            steps {
+                dir('terraform') {
+                    script {
+                        env.CHECKPOINT = "ESO"
+                        def CLUSTER_NAME = sh(script: "terraform output -raw cluster_name", returnStdout: true).trim()
+
+                        sh """
+                            chmod +x scripts/install-eso.sh
+                            scripts/install-eso.sh \
+                                ${CLUSTER_NAME} \
+                                ${REGION}
+                        """
+                    }
+                }
+            }
+        }
+
+        stage('Installing Prometheus Monitoring Stack') {
+            steps {
+                script {
+                    env.CHECKPOINT = "MONITORING"
+                }
+                dir('terraform') {
+                    sh '''
+                        chmod +x scripts/install-monitoring.sh
+                        scripts/install-monitoring.sh
+                    '''
+                }
+            }
+        }
+
+        stage('Apply Configs') {
+            steps {
+                dir('terraform') {
+                    script {
+                        env.CHECKPOINT = "CONFIG"
+                        def IRSA_ROLE_ARN = sh(script: "terraform output -raw irsa_role_arn", returnStdout: true).trim()
+                        def SECRET_NAME = sh(script: "terraform output -raw secret_name", returnStdout: true).trim()
+                        def RDS_ENDPOINT = sh(script: "terraform output -raw RDS_Endpoint", returnStdout: true).trim()
+
+                        sh """
+                            chmod +x scripts/conf-manifest-apply.sh
+                            scripts/conf-manifest-apply.sh \
+                                ${IRSA_ROLE_ARN} \
+                                ${SECRET_NAME} \
+                                ${REGION} \
+                                ${RDS_ENDPOINT}
+                        """
+                    }
+                }
+            }
+        }
+        
+        stage('Initialize Database Schema') {
+            steps {
+                withCredentials([usernamePassword(
+                    credentialsId: 'db_creds',
+                    usernameVariable: 'DB_USER',
+                    passwordVariable: 'DB_PASS'
+                )]) {
+                    dir('terraform') {
+                        script {
+                            env.CHECKPOINT = "DB"
+        
+                            def RDS_ENDPOINT = sh( script: "terraform output -raw RDS_Endpoint | cut -d':' -f1", returnStdout: true ).trim()
+                            sh """
+                            echo "Creating database if not exists..."
+        
+                            mysql -h "$RDS_ENDPOINT" \
+                                  -u "$DB_USER" \
+                                  -p"$DB_PASS" \
+                                  -e "CREATE DATABASE IF NOT EXISTS springbackend;"
+        
+                            echo "Applying schema..."
+        
+                            mysql -h "$RDS_ENDPOINT" \
+                                  -u "$DB_USER" \
+                                  -p"$DB_PASS" \
+                                  springbackend < ../DataBase_Schema/springbackend.sql
+        
+                            echo "Database initialized successfully"
+                            """
+                        }
+                    }
+                }
+            }
+        }
+
+        stage('Verify Everything') {
+            steps {
+                sh '''
+                    kubectl get pods -n kube-system | grep aws-load-balancer
+                    kubectl get pods -n ${NAMESPACE}
+                    kubectl get configmap app-config -n ${NAMESPACE}
+                    kubectl describe secretstore aws-secretstore -n ${NAMESPACE}
+
+                    kubectl wait externalsecret springbackend-db-secret \
+                        -n ${NAMESPACE} \
+                        --for=condition=Ready \
+                        --timeout=120s
+
+                    kubectl get externalsecret springbackend-db-secret -n ${NAMESPACE}
+                '''
+            }
+        }
+
+        stage('Final Verification') {
+            steps {
+                sh '''
+                    kubectl get all -n ${NAMESPACE}
+                    kubectl get pods -n kube-system | grep aws-load-balancer
+                '''
+            }
+        }
+
+        stage('Smart Rollback') {
+            when {
+                expression { currentBuild.currentResult == 'FAILURE' }
+            }
+            steps {
+                echo "Smart rollback triggered at checkpoint: ${CHECKPOINT}"
+
+                script {
+                    if (env.CHECKPOINT == "CONFIG") {
+                        sh '''
+                            kubectl delete externalsecret springbackend-db-secret -n webapp --ignore-not-found=true
+                            kubectl delete secretstore aws-secretstore -n webapp --ignore-not-found=true
+                            kubectl delete serviceaccount backend-sa -n webapp --ignore-not-found=true
+                            kubectl delete configmap app-config -n webapp --ignore-not-found=true
+                        '''
+                    }
+
+                    if (env.CHECKPOINT == "MONITORING" || env.CHECKPOINT == "CONFIG") {
+                        sh 'helm uninstall kube-prometheus-stack -n webapp || true'
+                    }
+
+                    if (env.CHECKPOINT == "ESO" || env.CHECKPOINT == "MONITORING" || env.CHECKPOINT == "CONFIG") {
+                        sh 'helm uninstall external-secrets -n webapp || true'
+                    }
+
+                    if (env.CHECKPOINT == "LB" || env.CHECKPOINT == "ESO" || env.CHECKPOINT == "MONITORING" || env.CHECKPOINT == "CONFIG") {
+                        sh '''
+                            helm uninstall aws-load-balancer-controller -n kube-system || true
+                            kubectl delete serviceaccount aws-load-balancer-controller -n kube-system --ignore-not-found=true
+                        '''
+                    }
+                }
+
+                echo "Smart rollback completed"
+            }
+        }
+    }
+
+    post {
+        success {
+            echo "Configuration successful!"
+        }
+        failure {
+            echo "Pipeline failed (rollback may have been applied)."
+        }
+        always {
+            cleanWs()
+        }
+    }
+}
