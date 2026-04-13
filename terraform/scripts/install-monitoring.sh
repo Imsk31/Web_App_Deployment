@@ -14,6 +14,7 @@ helm upgrade --install kube-prometheus-stack \
   prometheus-community/kube-prometheus-stack \
   --namespace ${NAMESPACE} \
   --set grafana.enabled=true \
+  --set grafana.adminPassword="admin123" \   #change this password in production and consider using a secret
   --set alertmanager.enabled=true \
   --set nodeExporter.enabled=true \
   --set kubeStateMetrics.enabled=true \
