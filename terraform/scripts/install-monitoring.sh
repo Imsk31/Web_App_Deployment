@@ -2,7 +2,7 @@
 set -e
 
 # ── Variables ────────────────────────────────────────
-NAMESPACE="webapp"
+NAMESPACE="monitoring"
 
 echo "=== [1/2] Adding Prometheus Helm repo ==="
 helm repo add prometheus-community \
